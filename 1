@@ -1,0 +1,86 @@
+import random
+import heapq
+import time
+
+class Graph:
+    def __init__(self, vertices):
+        self.V = vertices  # Количество вершин
+        self.adj_list = {i: [] for i in range(vertices)}  # Список смежности
+
+    def add_edge(self, u, v, weight):
+        self.adj_list[u].append((v, weight))  # Добавление ребра между вершинами u и v с весом
+
+    def bellman_ford(self, src):
+        distances = [float("inf")] * self.V  # Инициализация расстояний до всех вершин как бесконечность
+        distances[src] = 0  # Расстояние до начальной вершины равно 0
+        
+        # Основной цикл алгоритма
+        for _ in range(self.V - 1):
+            for u in self.adj_list:
+                for v, weight in self.adj_list[u]:
+                    # Обновление расстояний
+                    if distances[u] + weight < distances[v]:
+                        distances[v] = distances[u] + weight
+
+        # Проверка на наличие циклов с отрицательным весом
+        for u in self.adj_list:
+            for v, weight in self.adj_list[u]:
+                if distances[u] + weight < distances[v]:
+                    print("Граф содержит цикл с отрицательным весом")
+
+        return distances
+
+    def dijkstra(self, src):
+        distances = [float("inf")] * self.V  # Инициализация расстояний
+        distances[src] = 0  # Расстояние до начальной вершины равно 0
+        priority_queue = [(0, src)]  # Приоритетная очередь
+        
+        while priority_queue:
+            current_distance, current_vertex = heapq.heappop(priority_queue)  # Извлечение вершины с минимальным расстоянием
+            
+            if current_distance > distances[current_vertex]:  # Пропуск, если расстояние больше
+                continue
+            
+            for neighbor, weight in self.adj_list[current_vertex]:  # Обход соседей текущей вершины
+                distance = current_distance + weight  # Рассчитываем новое расстояние
+
+                if distance < distances[neighbor]:  # Если новое расстояние меньше известного
+                    distances[neighbor] = distance  # Обновляем расстояние
+                    heapq.heappush(priority_queue, (distance, neighbor))  # Добавление в очередь
+
+        return distances
+
+
+def generate_graph(n, sparsity):
+    graph = Graph(n)  # Создание графа
+    for _ in range(int(sparsity * n * (n - 1) / 2)):  # Генерация рёбер
+        u = random.randint(0, n - 1)
+        v = random.randint(0, n - 1)
+        weight = random.randint(1, 10)  # Случайный вес ребра
+        graph.add_edge(u, v, weight)  # Добавление ребра в граф
+    return graph
+
+def main():
+    vertex_count = 150  # Количество вершин
+    sparsity = 0.1  # Плотность графа
+
+    graph = generate_graph(vertex_count, sparsity)  # Генерация графа
+
+    src = 0  # Начальная вершина
+
+    # Тестирование алгоритма Беллмана-Форда
+    start_time = time.time()
+    bf_distances = graph.bellman_ford(src)  # Запуск алгоритма
+    bf_time = time.time() - start_time  # Замер времени выполнения
+    print(f"Расстояния от вершины {src} с помощью Беллмана-Форда: {bf_distances}")
+    print(f"Время работы алгоритма Беллмана-Форда: {bf_time:.6f} секунд")
+
+    # Тестирование алгоритма Дейкстры
+    start_time = time.time()
+    dijkstra_distances = graph.dijkstra(src)  # Запуск алгоритма
+    dijkstra_time = time.time() - start_time  # Замер времени выполнения
+    print(f"Расстояния от вершины {src} с помощью Дейкстры: {dijkstra_distances}")
+    print(f"Время работы алгоритма Дейкстры: {dijkstra_time:.6f} секунд")
+
+if __name__ == "__main__":
+    main()
